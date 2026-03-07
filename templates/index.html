@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Disease Classifier</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #10B981;
+            --primary-dark: #059669;
+            --bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --text-main: #1f2937;
+            --text-muted: #4b5563;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            padding: 2rem;
+        }
+
+        .container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-weight: 700;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-dark);
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+            line-height: 1.5;
+        }
+
+        .upload-area {
+            border: 2px dashed #a7f3d0;
+            border-radius: 16px;
+            padding: 2.5rem 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.5);
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: rgba(209, 250, 229, 0.3);
+            transform: scale(1.02);
+        }
+
+        .upload-area input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .upload-text {
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .upload-hint {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            display: block;
+        }
+
+        #file-name-display {
+            display: none;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            background: #d1fae5;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            display: inline-block;
+            word-break: break-all;
+        }
+
+        .btn-submit {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            margin-top: 1rem;
+        }
+
+        .btn-submit:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-submit:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .error-message {
+            color: #ef4444;
+            background: #fef2f2;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            border: 1px solid #fecaca;
+        }
+
+        .loader-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #d1fae5;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loader-text {
+            margin-top: 1rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="loader-overlay" id="loader">
+        <div class="spinner"></div>
+        <div class="loader-text">Analyzing Leaf...</div>
+    </div>
+
+    <div class="container">
+        <h1>Plant Care AI</h1>
+        <p class="subtitle">Upload a photo of a plant leaf and our AI will instantly identify any diseases to help you
+            treat it quickly.</p>
+
+        {% if error %}
+        <div class="error-message">
+            <strong>Oops!</strong> {{ error }}
+        </div>
+        {% endif %}
+
+        <form action="{{ url_for('predict') }}" method="POST" enctype="multipart/form-data" id="upload-form">
+            <div class="upload-area" id="drop-zone">
+                <span class="upload-icon">🌿</span>
+                <span class="upload-text">Drag & Drop Image Here</span>
+                <span class="upload-hint">or click to browse from your device</span>
+                <input type="file" name="file" id="file-input" accept="image/*" required>
+            </div>
+
+            <div id="file-name-container" style="display: none; margin-bottom: 1.5rem;">
+                <span id="file-name-display"></span>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submit-btn" disabled>Scan Plant</button>
+        </form>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const submitBtn = document.getElementById('submit-btn');
+        const fileNameDisplay = document.getElementById('file-name-display');
+        const fileNameContainer = document.getElementById('file-name-container');
+        const dropZone = document.getElementById('drop-zone');
+        const uploadForm = document.getElementById('upload-form');
+        const loader = document.getElementById('loader');
+
+        fileInput.addEventListener('change', function () {
+            if (this.files && this.files.length > 0) {
+                fileNameDisplay.textContent = 'Selected: ' + this.files[0].name;
+                fileNameContainer.style.display = 'block';
+                submitBtn.disabled = false;
+                dropZone.style.borderColor = 'var(--primary)';
+            } else {
+                fileNameContainer.style.display = 'none';
+                submitBtn.disabled = true;
+                dropZone.style.borderColor = '#a7f3d0';
+            }
+        });
+
+        uploadForm.addEventListener('submit', function () {
+            if (!submitBtn.disabled) {
+                loader.style.display = 'flex';
+            }
+        });
+
+        // Drag and drop styles
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropZone.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            dropZone.classList.remove('dragover');
+        }
+    </script>
+</body>
+
+</html>
